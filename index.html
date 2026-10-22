@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coding C++</title>
+  
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #18191c;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top App Bar */
+    .top-bar {
+      height: 52px;
+      background-color: #1e1f24;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid #2a2c33;
+      z-index: 10;
+    }
+
+    .brand-title {
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 1.05rem;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .brand-title span {
+      color: #4CAF50;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-run {
+      background-color: #27ae60;
+      color: #ffffff;
+      border: none;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-run:active {
+      background-color: #219653;
+      transform: scale(0.97);
+    }
+
+    .btn-menu {
+      background: transparent;
+      border: none;
+      color: #cfd3dc;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Editor Container */
+    .editor-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background-color: #212121;
+    }
+
+    .CodeMirror {
+      height: 100%;
+      font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      user-select: text;
+    }
+
+    .error-line-highlight {
+      background-color: rgba(231, 76, 60, 0.28) !important;
+      border-bottom: 1px dashed #e74c3c;
+    }
+
+    /* Horizontal Symbol Keyboard Bar */
+    .symbols-bar {
+      height: 44px;
+      background-color: #1e1f24;
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding: 0 6px;
+      border-top: 1px solid #2a2c33;
+      scrollbar-width: none;
+    }
+
+    .symbols-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .sym-btn {
+      background-color: #2b2d35;
+      color: #f1f1f1;
+      border: 1px solid #383a45;
+      border-radius: 4px;
+      padding: 5px 11px;
+      margin: 0 3px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.88rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .sym-btn:active {
+      background-color: #4a4d5c;
+    }
+
+    /* Terminal Console Screen */
+    .terminal-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0c0d0e;
+      color: #e6e6e6;
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .terminal-header {
+      padding: 12px 16px;
+      background-color: #17181c;
+      color: #a0a6b5;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-bottom: 1px solid #25272e;
+    }
+
+    .terminal-output {
+      flex: 1;
+      padding: 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-y: auto;
+      user-select: text;
+      line-height: 1.5;
+    }
+
+    .terminal-footer {
+      padding: 10px 14px;
+      background-color: #17181c;
+      border-top: 1px solid #25272e;
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-return {
+      background-color: #32353e;
+      color: #d1d5db;
+      border: none;
+      padding: 8px 24px;
+      font-size: 0.88rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-return:active {
+      background-color: #404450;
+    }
+
+    /* Arabic Ooops Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      color: #2c3e50;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 360px;
+      padding: 24px 20px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+      text-align: center;
+      direction: rtl;
+      animation: popIn 0.25s ease-out;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon-circle {
+      width: 58px;
+      height: 58px;
+      background-color: #fde8e8;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px auto;
+    }
+
+    .modal-icon {
+      width: 36px;
+      height: 36px;
+      background-color: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      font-size: 20px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      direction: ltr;
+    }
+
+    .error-line-badge {
+      display: inline-block;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .modal-explanation {
+      font-size: 0.94rem;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      text-align: right;
+    }
+
+    .modal-code-fix {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 18px;
+      text-align: left;
+      direction: ltr;
+      font-family: 'Consolas', monospace;
+      font-size: 0.84rem;
+      color: #1e293b;
+      white-space: pre-wrap;
+    }
+
+    .modal-btn-ok {
+      width: 100%;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .modal-btn-ok:active {
+      background-color: #c0392b;
+    }
+    
+    /* Loading overlay */
+    .loading-spinner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.65);
+      z-index: 150;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 1rem;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #27ae60;
+      animation: spin 0.8s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="top-bar">
+    <div class="brand-title">Coding <span>C++</span></div>
+    <div class="actions">
+      <button class="btn-run" id="runBtn" onclick="runCppCode()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        RUN
+      </button>
+      <button class="btn-menu" onclick="toggleMenu()">MENU</button>
+    </div>
+  </header>
+
+  <!-- Code editor area -->
+  <main class="editor-container">
+    <textarea id="codeEditor"></textarea>
+  </main>
+
+  <!-- Quick symbol shortcuts bar -->
+  <nav class="symbols-bar">
+    <button class="sym-btn" onclick="insertSymbol('    ')">Tab</button>
+    <button class="sym-btn" onclick="insertSymbol('{ }', 2)">{ }</button>
+    <button class="sym-btn" onclick="insertSymbol('( )', 2)">( )</button>
+    <button class="sym-btn" onclick="insertSymbol('""', 1)">""</button>
+    <button class="sym-btn" onclick="insertSymbol(';')">;</button>
+    <button class="sym-btn" onclick="insertSymbol('cout << ', 0)">cout &lt;&lt;</button>
+    <button class="sym-btn" onclick="insertSymbol('cin >> ', 0)">cin &gt;&gt;</button>
+    <button class="sym-btn" onclick="insertSymbol('endl;')">endl;</button>
+    <button class="sym-btn" onclick="insertSymbol('==')">==</button>
+    <button class="sym-btn" onclick="insertSymbol('&&')">&amp;&amp;</button>
+    <button class="sym-btn" onclick="insertSymbol('++')">++</button>
+    <button class="sym-btn" onclick="insertSymbol('--')">--</button>
+    <button class="sym-btn" onclick="insertSymbol('&lt;')">&lt;</button>
+    <button class="sym-btn" onclick="insertSymbol('&gt;')">&gt;</button>
+    <button class="sym-btn" onclick="insertSymbol('#include ')">#include</button>
+  </nav>
+
+  <!-- Terminal Output Screen -->
+  <section class="terminal-screen" id="terminalScreen">
+    <div class="terminal-header">Compile Result</div>
+    <div class="terminal-output" id="terminalOutput"></div>
+    <div class="terminal-footer">
+      <button class="btn-return" onclick="closeTerminal()">[Process completed]</button>
+    </div>
+  </section>
+
+  <!-- Arabic Ooops Error Modal -->
+  <div class="modal-overlay" id="ooopsModal">
+    <div class="modal-box">
+      <div class="modal-icon-circle">
+        <div class="modal-icon">&#10005;</div>
+      </div>
+      <h3 class="modal-title">Ooops...</h3>
+      <div class="error-line-badge" id="modalLineBadge">السطر: 0</div>
+      <p class="modal-explanation" id="modalExplanation">تم اكتشاف خطأ في الكود البرمجي.</p>
+      <div class="modal-code-fix" id="modalCodeFix">// التصحيح المقترح</div>
+      <button class="modal-btn-ok" onclick="handleErrorResolved()">OK</button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner"></div>
+    <div>جاري ترجمة وتشغيل الكود...</div>
+  </div>
+
+  <!-- CodeMirror Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+
+  <script>
+    // Initial starter code
+    const initialCode = `#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, World!" << endl;
+    return 0;
+}`;
+
+    // Initialize CodeMirror
+    const textarea = document.getElementById('codeEditor');
+    textarea.value = initialCode;
+
+    const editor = CodeMirror.fromTextArea(textarea, {
+      lineNumbers: true,
+      mode: "text/x-c++src",
+      theme: "material-darker",
+      tabSize: 4,
+      indentUnit: 4,
+      lineWrapping: true,
+      autoCloseBrackets: true,
+      matchBrackets: true
+    });
+
+    // Disable auto-capitalize, autocorrect, spellcheck on mobile keyboard
+    const cmInput = editor.getInputField();
+    cmInput.setAttribute('autocapitalize', 'none');
+    cmInput.setAttribute('autocorrect', 'off');
+    cmInput.setAttribute('spellcheck', 'false');
+    cmInput.setAttribute('autocomplete', 'off');
+
+    let currentErrorLine = null;
+    let errorMark = null;
+
+    // Insert symbols smoothly at cursor
+    function insertSymbol(symbol, cursorOffsetFromEnd = 0) {
+      const doc = editor.getDoc();
+      const cursor = doc.getCursor();
+      doc.replaceRange(symbol, cursor);
+      if (cursorOffsetFromEnd > 0) {
+        doc.setCursor({
+          line: cursor.line,
+          ch: cursor.ch + (symbol.length - cursorOffsetFromEnd)
+        });
+      }
+      editor.focus();
+    }
+
+    function toggleMenu() {
+      alert("Coding C++ Web App\n- واجهة هاتف متكاملة\n- تشخيص ذكي للأخطاء بالعربية");
+    }
+
+    function closeTerminal() {
+      document.getElementById('terminalScreen').style.display = 'none';
+    }
+
+    // Client-side quick static pre-check
+    function staticCodeAnalysis(code) {
+      const lines = code.split('\n');
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const lineNum = i + 1;
+
+        if (line.startsWith('//') || line.startsWith('/*')) continue;
+
+        // 1. cout with single <
+        if (line.includes('cout') && /cout\s*<[^<]/.test(line)) {
+          return {
+            line: lineNum,
+            msg: "لقد استخدمت علامة أصغر واحدة (<) مع أمر الطباعة cout بدلاً من (<<). في C++ عامل الإخراج دائماً مضاعف.",
+            fix: 'cout << "Hello, World!" << endl;'
+          };
+        }
+
+        // 2. cin with single >
+        if (line.includes('cin') && /cin\s*>[^>]/.test(line)) {
+          return {
+            line: lineNum,
+            msg: "لقد استخدمت علامة أكبر واحدة (>) مع أمر الإدخال cin بدلاً من (>>).",
+            fix: "cin >> x;"
+          };
+        }
+
+        // 3. Assignment inside if condition: if (x = 5)
+        if (/^if\s*\(.*[^=!<>]==?[^=!<>].*\)/.test(line) && !line.includes('==') && !line.includes('<=') && !line.includes('>=') && !line.includes('!=')) {
+          if (/^if\s*\([^=]+=[^=]+\)/.test(line)) {
+            return {
+              line: lineNum,
+              msg: "تحذير: لقد استخدمت علامة المساواة الفردية (=) داخل جملة if وهي للمطابقة والإسناد، للمقارنة المنطقية يجب استخدام (==).",
+              fix: "if (x == 5) { ... }"
+            };
+          }
+        }
+
+        // 4. Missing semicolon on typical statements
+        const isStatement = /^(int|float|double|char|string|cout|cin|return)\b/.test(line);
+        if (isStatement && !line.endsWith(';') && !line.endsWith('{') && !line.endsWith('}') && !line.startsWith('#')) {
+          return {
+            line: lineNum,
+            msg: "نسيت وضع الفاصلة المنقوطة (;) في نهاية هذا السطر. كل أمر تنفيذي في لغة C++ يجب أن ينتهي بـ (;).",
+            fix: line + ";"
+          };
+        }
+      }
+
+      // Check unbalanced curly braces
+      let braceCount = 0;
+      for (let i = 0; i < lines.length; i++) {
+        for (let char of lines[i]) {
+          if (char === '{') braceCount++;
+          if (char === '}') braceCount--;
+        }
+      }
+      if (braceCount > 0) {
+        return {
+          line: lines.length,
+          msg: "هناك قوس إغلاق مفقود (})! تأكد من إغلاق كافة الأقواس والكتل البرمجية المفتوحة.",
+          fix: "}"
+        };
+      }
+
+      return null;
+    }
+
+    // Translate server compiler error messages into student-friendly Arabic
+    function parseCompilerError(stderr) {
+      let lineNum = 1;
+      const lineMatch = stderr.match(/:(\d+):(\d+)?:?\s*(error|fatal error):/i) || stderr.match(/line\s*(\d+)/i);
+      if (lineMatch) {
+        lineNum = parseInt(lineMatch[1], 10);
+      }
+
+      let explanation = "حدث خطأ أثناء ترجمة الكود.";
+      let fix = "// راجع السطر المحدد";
+
+      if (stderr.includes("expected ';'") || stderr.includes("expected ';' before")) {
+        explanation = "نسيت وضع الفاصلة المنقوطة (;) في نهاية هذا السطر أو السطر الذي يسبقه مباشرة.";
+        fix = 'cout << "Hello";';
+      } else if (stderr.includes("was not declared in this scope")) {
+        const varMatch = stderr.match(/'([^']+)' was not declared/);
+        const varName = varMatch ? varMatch[1] : "المتغير";
+        explanation = `المتغير (${varName}) غير معرف! تأكد من كتابة اسمه بشكل صحيح أو تعريفه وتحديد نوعه مسبقاً (مثل int أو string).`;
+        fix = `int ${varName} = 0;`;
+      } else if (stderr.includes("expected '}'") || stderr.includes("expected declaration end")) {
+        explanation = "يوجد قوس إغلاق مفقود (}) في إحدى الدوال أو الكتل البرمجية.";
+        fix = "}";
+      } else if (stderr.includes("no match for 'operator<<'") || stderr.includes("no match for 'operator<'")) {
+        explanation = "خطأ في استخدام علامة الإخراج مع cout، تأكد من استخدام << بدلاً من <.";
+        fix = 'cout << "text" << endl;';
+      } else if (stderr.includes("undefined reference to `main'")) {
+        explanation = "الدالة الأساسية main غير موجودة! البرنامج يحتاج دائماً لدالة: int main() { } لبدء التنفيذ.";
+        fix = "int main() {\n    return 0;\n}";
+      } else {
+        const cleanErr = stderr.split('\n').filter(l => l.includes('error:')).map(l => l.replace(/.*error:\s*/i, ''))[0];
+        explanation = "خطأ برمجي في التركيب: " + (cleanErr || stderr.split('\n')[0]);
+      }
+
+      return { line: lineNum, msg: explanation, fix: fix };
+    }
+
+    // Compiler 1: Wandbox API (Supports CORS)
+    async function runViaWandbox(code) {
+      const res = await fetch('https://wandbox.org/api/compile.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: code,
+          compiler: 'gcc-head',
+          save: false
+        })
+      });
+      if (!res.ok) throw new Error("Wandbox error");
+      const data = await res.json();
+      
+      const compileErr = (data.compiler_error || '').trim();
+      const runErr = (data.program_error || '').trim();
+      const output = (data.program_output || data.compiler_output || '').trim();
+
+      if (data.status !== "0" && (compileErr || runErr)) {
+        return { isError: true, error: compileErr || runErr };
+      }
+      return { isError: false, output: output || "Program finished with exit code 0." };
+    }
+
+    // Compiler 2: Piston API (Fallback)
+    async function runViaPiston(code) {
+      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'cpp',
+          version: '10.2.0',
+          files: [{ name: 'main.cpp', content: code }]
+        })
+      });
+      if (!res.ok) throw new Error("Piston error");
+      const data = await res.json();
+      
+      const compileErr = data.compile && data.compile.stderr ? data.compile.stderr : '';
+      const runErr = data.run && data.run.stderr ? data.run.stderr : '';
+      const fullErr = (compileErr + "\n" + runErr).trim();
+
+      if (fullErr.length > 0 && (data.run.code !== 0 || compileErr.length > 0)) {
+        return { isError: true, error: fullErr };
+      }
+      return { isError: false, output: data.run.output || "Program finished with exit code 0." };
+    }
+
+    // Main execution handler
+    async function runCppCode() {
+      const code = editor.getValue();
+      clearHighlight();
+
+      // Step 1: Static Pre-Check
+      const localError = staticCodeAnalysis(code);
+      if (localError) {
+        showOoopsModal(localError);
+        return;
+      }
+
+      const spinner = document.getElementById('loadingSpinner');
+      spinner.style.display = 'flex';
+
+      let result = null;
+
+      // Try Wandbox first, then fallback to Piston
+      try {
+        result = await runViaWandbox(code);
+      } catch (err1) {
+        console.warn("Wandbox failed, trying Piston...", err1);
+        try {
+          result = await runViaPiston(code);
+        } catch (err2) {
+          console.error("Both compilers failed:", err2);
+        }
+      }
+
+      spinner.style.display = 'none';
+
+      if (!result) {
+        showOoopsModal({
+          line: 1,
+          msg: "تعذر الاتصال بخادم الترجمة (سبب محتمل: المتصفح يمنع طلبات الشبكة عند فتح الملف محلياً عبر content:// أو file://). جرب رفعه على رابط ويب أو التحقق من اتصال الإنترنت.",
+          fix: "// افتح الرابط عبر متصفح عادي أو استضفه على GitHub Pages"
+        });
+        return;
+      }
+
+      if (result.isError) {
+        const parsed = parseCompilerError(result.error);
+        showOoopsModal(parsed);
+      } else {
+        showTerminal(result.output);
+      }
+    }
+
+    function showOoopsModal(errorObj) {
+      currentErrorLine = errorObj.line || 1;
+      document.getElementById('modalLineBadge').innerText = "السطر: " + currentErrorLine;
+      document.getElementById('modalExplanation').innerText = errorObj.msg;
+      document.getElementById('modalCodeFix').innerText = errorObj.fix;
+      document.getElementById('ooopsModal').style.display = 'flex';
+    }
+
+    function handleErrorResolved() {
+      document.getElementById('ooopsModal').style.display = 'none';
+      if (currentErrorLine !== null) {
+        const zeroBasedLine = Math.max(0, currentErrorLine - 1);
+        editor.setCursor({ line: zeroBasedLine, ch: 0 });
+        editor.focus();
+        highlightErrorLine(zeroBasedLine);
+      }
+    }
+
+    function highlightErrorLine(lineIndex) {
+      clearHighlight();
+      errorMark = editor.addLineClass(lineIndex, 'background', 'error-line-highlight');
+    }
+
+    function clearHighlight() {
+      if (errorMark !== null) {
+        const total = editor.lineCount();
+        for (let i = 0; i < total; i++) {
+          editor.removeLineClass(i, 'background', 'error-line-highlight');
+        }
+        errorMark = null;
+      }
+    }
+
+    function showTerminal(text) {
+      document.getElementById('terminalOutput').innerText = text;
+      document.getElementById('terminalScreen').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
